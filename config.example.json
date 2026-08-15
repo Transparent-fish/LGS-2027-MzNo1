@@ -1,0 +1,8 @@
+{
+  "port": 8787,
+  "apiBase": "https://paintboard.luogu.me",
+  "wsUrl": "wss://paintboard.luogu.me/api/paintboard/ws",
+  "maxPacketsPerSec": 230,
+  "cooldownSecs": 10,
+  "maxReconnectSecs": 60
+}
