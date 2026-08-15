@@ -1,53 +1,72 @@
-# 重构 Todo
+# 后端重构 Todo
 
-> 目标：把当前“技术切片 + 入口堆逻辑”的结构，收敛成“按业务场景聚合、分层明确、函数小而稳”的架构。
+> 目标：把 `apps/server` 从“入口堆逻辑 + 技术切片目录”改成“组合根 + 应用层 + 领域层 + 基础设施层”的稳定结构。
 
-## 目标架构
+## 架构目标
 
 - [ ] 后端按 `app / domain / infra / shared` 分层
-- [ ] 前端按 `app / pages / components / stores / api / shared` 分层
-- [ ] 统一导出风格：禁止 `export default`
-- [ ] 统一类型风格：优先 `interface`，仅在联合类型和映射类型场景使用 `type`
-- [ ] 禁止 `any`，必要时使用 `unknown` 并做显式收窄
-- [ ] 函数控制在 80 行以内，超出必须拆分
+- [ ] 入口文件只做启动装配，不承载业务逻辑
+- [ ] 路由、控制器、服务、仓储职责分离
+- [ ] 协议、网络、存储、调度彼此解耦
+- [ ] 所有导出使用命名导出，禁止 `export default`
+- [ ] 优先使用 `interface`，仅在联合类型和映射类型场景使用 `type`
+- [ ] 禁止 `any`，不确定输入统一用 `unknown` 后再收窄
+- [ ] 函数体控制在 80 行以内，超过就拆分
 - [ ] 导入顺序统一为：外部依赖 → `@template/*` 包 → 相对路径
 
-## 后端重构顺序
+## 目标目录
 
-- [ ] 将 `apps/server/src/main.ts` 纯化为启动装配层，只保留依赖创建、插件注册、路由注册和监听
-- [ ] 拆分 `apps/server/src/http/routes.ts`，按 `tokens / paint / status` 分成独立 controller 文件
-- [ ] 把 `Painter` 从“状态机 + 队列 + 回执处理 + 调度”拆成多个小模块
-- [ ] 将 `diffBoard`、`Board`、任务队列、回执表归入 `domain/paint`
-- [ ] 将上游 HTTP / WS 连接归入 `infra/paintboard`
-- [ ] 将 token 落盘、加密、解密、读取封装成 `infra/storage` 和 `domain/token` 的组合
-- [ ] 把 `routes.ts` 中的请求体 `as` 强转替换为显式校验和窄化
-- [ ] 所有 `TODO(老师)` 逐条收敛到具体实现或独立 issue，不保留悬空注释
+- [ ] `apps/server/src/main.ts`
+- [ ] `apps/server/src/app/container.ts`
+- [ ] `apps/server/src/app/routes/tokenRoutes.ts`
+- [ ] `apps/server/src/app/routes/paintRoutes.ts`
+- [ ] `apps/server/src/app/routes/statusRoutes.ts`
+- [ ] `apps/server/src/app/controllers/tokenController.ts`
+- [ ] `apps/server/src/app/controllers/paintController.ts`
+- [ ] `apps/server/src/app/controllers/statusController.ts`
+- [ ] `apps/server/src/app/ws/wsHub.ts`
+- [ ] `apps/server/src/domain/token/tokenTypes.ts`
+- [ ] `apps/server/src/domain/token/tokenService.ts`
+- [ ] `apps/server/src/domain/token/tokenPolicy.ts`
+- [ ] `apps/server/src/domain/paint/board.ts`
+- [ ] `apps/server/src/domain/paint/diff.ts`
+- [ ] `apps/server/src/domain/paint/paintQueue.ts`
+- [ ] `apps/server/src/domain/paint/paintScheduler.ts`
+- [ ] `apps/server/src/domain/paint/paintState.ts`
+- [ ] `apps/server/src/domain/protocol/opcode.ts`
+- [ ] `apps/server/src/domain/protocol/packetCodec.ts`
+- [ ] `apps/server/src/infra/paintboard/paintboardHttp.ts`
+- [ ] `apps/server/src/infra/paintboard/paintboardWs.ts`
+- [ ] `apps/server/src/infra/storage/tokenRepository.ts`
+- [ ] `apps/server/src/infra/storage/tokenCrypto.ts`
+- [ ] `apps/server/src/infra/storage/secretStore.ts`
+- [ ] `apps/server/src/infra/runtime/configLoader.ts`
+- [ ] `apps/server/src/infra/runtime/idGenerator.ts`
+- [ ] `apps/server/src/shared/errors.ts`
+- [ ] `apps/server/src/shared/result.ts`
+- [ ] `apps/server/src/shared/validators.ts`
 
-## 前端重构顺序
+## 实施顺序
 
-- [ ] 将 `App.vue` 拆为布局壳和连接逻辑两部分
-- [ ] 将 REST / WS 访问统一收敛到 `api/` 和 `ws/`，避免组件直接拼接口
-- [ ] 将 `paint` 与 `tokens` store 中的网络刷新逻辑下沉到服务层
-- [ ] 将 `Dashboard.vue`、`Tokens.vue` 拆成页面和可复用组件
-- [ ] 把菜单、状态标签、表格、控制按钮拆成独立组件，减少页面文件长度
+- [ ] 先纯化 `apps/server/src/main.ts`，让它只负责依赖创建和模块装配
+- [ ] 拆分 `apps/server/src/http/routes.ts` 为独立 controller 和 route 文件
+- [ ] 把 `Painter` 拆成调度器、队列、状态、回执处理几个小模块
+- [ ] 把 `Board`、`diffBoard`、`AckTable` 归并到 `domain/paint`
+- [ ] 把 `protocol/ws.ts`、`api/http.ts` 收拢到 `infra/paintboard`
+- [ ] 把 token 文件读写与加解密拆成 repository 和 crypto 两层
+- [ ] 把请求体 `as` 强转替换成显式校验与类型收窄
+- [ ] 清理所有 `TODO(老师)`，改成真实实现或拆到独立任务
 
-## 协议与数据待确认
+## 协议确认
 
 - [ ] 用真实服务端确认 UUID / 识别码字节序
 - [ ] 确认 `uid` 拆三字节是否始终取低 24 位
-- [ ] 校准 `config.cooldownSecs` 的默认值和服务端实际冷却行为
-- [ ] 明确 `PaintProgress`、`TokenView`、状态事件的最终契约，避免前后端字段漂移
+- [ ] 校准 `config.cooldownSecs` 默认值和真实冷却时长
+- [ ] 明确 `PaintProgress`、Token 视图、WS 事件的最终字段契约
 
 ## 质量门禁
 
-- [ ] 添加/补齐 lint 规则，强制 `no-explicit-any`、导出规则、import 顺序
-- [ ] 给每个新增模块补类型检查覆盖，避免重构期间回退成隐式 `any`
-- [ ] 在重构后跑通 `pnpm typecheck` 和 `pnpm build`
-- [ ] 对绘画调度链路补最小单测，优先覆盖状态机、回执处理和 token 存储
-
-## 建议的首批落点
-
-- [ ] 先拆 `apps/server/src/main.ts`
-- [ ] 再拆 `apps/server/src/http/routes.ts`
-- [ ] 然后拆 `apps/server/src/pipeline/painter.ts`
-- [ ] 最后整理 `apps/web/src/App.vue` 和两个 store
+- [ ] 补齐 lint 规则，强制 `no-explicit-any`、导出规则、import 顺序
+- [ ] 为新增模块补最小类型检查覆盖
+- [ ] 重构后跑通 `pnpm typecheck` 和 `pnpm build`
+- [ ] 为调度链路补最小单测，优先覆盖状态机、回执和 token 存储

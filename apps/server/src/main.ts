@@ -1,53 +1,21 @@
-import Fastify from 'fastify';
-import cors from '@fastify/cors';
-import websocket from '@fastify/websocket';
-import { loadConfig } from './config.js';
-import { createHttp } from './api/http.js';
-import { PaintboardWs } from './protocol/ws.js';
-import { Painter } from './pipeline/painter.js';
-import { WsHub } from './http/ws-hub.js';
-import { registerRoutes } from './http/routes.js';
+import type { ServerContainer } from './container.js';
+import { loadConfig } from './infra/runtime/configLoader.js';
+import { createServerContainer } from './container.js';
 
-async function main() {
-  const cfg = loadConfig();
-  const app = Fastify({ logger: true });
-  await app.register(cors, { origin: true });
-  await app.register(websocket);
-
-  const http = createHttp(cfg.apiBase);
-  const hub = new WsHub();
-
-  // 上游连接：只读订阅绘画事件；发送逻辑由老师实现
-  const upWs = new PaintboardWs(cfg.wsUrl, 'readonly', {
-    onPacket: (p) => {
-      if (p.op === 0xfa) {
-        // TODO(老师): 更新本地版面 / 守护模式补画
-      }
-    },
-    onOpen: () => hub.broadcast({ type: 'log', line: '[ws] 上游连接已打开' }),
-    onClose: (code, reason) => hub.broadcast({ type: 'log', line: `[ws] 上游断开 ${code}: ${reason}` }),
-    onFatal: (reason) => hub.broadcast({ type: 'log', line: `[ws] ${reason}` }),
-  }, cfg.maxReconnectSecs);
-
-  const painter = new Painter(upWs, cfg.maxPacketsPerSec, {
-    onProgress: (p) => hub.broadcast({ type: 'progress', payload: { ...p } }),
-    onLog: (line) => hub.broadcast({ type: 'log', line }),
-  });
-
-  registerRoutes(app, { http, painter, hub });
-
-  // 面板 WebSocket（浏览器 ← 后端）
-  app.get('/ws', { websocket: true }, (socket) => {
-    hub.add(socket);
-  });
-
-  upWs.start();
-
-  await app.listen({ port: cfg.port, host: '127.0.0.1' });
-  console.log(`[server] listening on http://127.0.0.1:${cfg.port}`);
+/**
+ * 后端程序入口。
+ * 这里只负责启动时的最高层协调，不包含业务实现。
+ */
+export function main(container: ServerContainer): void {
+    void container;
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+/**
+ * 后端启动引导。
+ * 先加载配置，再创建依赖容器，最后交给主入口处理。
+ */
+export function bootstrap(): void {
+    const config = loadConfig();
+    const container = createServerContainer(config);
+    main(container);
+}

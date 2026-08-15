@@ -28,14 +28,14 @@ pnpm dev
 
 ## 常用命令
 
-| 命令 | 作用 |
-| --- | --- |
-| `pnpm dev` | 同时启动前端和后端 |
-| `pnpm build` | 构建全部子包 |
-| `pnpm start` | 启动后端生产构建，需先 `build` |
-| `pnpm typecheck` | 运行全部子包类型检查 |
-| `pnpm --filter server dev` | 只运行后端开发模式 |
-| `pnpm --filter web dev` | 只运行前端开发模式 |
+| 命令                         | 作用                            |
+| ---------------------------- | ------------------------------- |
+| `pnpm dev`                 | 同时启动前端和后端              |
+| `pnpm build`               | 构建全部子包                    |
+| `pnpm start`               | 启动后端生产构建，需先`build` |
+| `pnpm typecheck`           | 运行全部子包类型检查            |
+| `pnpm --filter server dev` | 只运行后端开发模式              |
+| `pnpm --filter web dev`    | 只运行前端开发模式              |
 
 ## 目录结构
 
@@ -83,14 +83,14 @@ apps/
 
 在仓库根目录创建 `config.json` 覆盖默认配置，`apps/server` 会从当前工作目录读取：
 
-| 字段 | 默认值 | 说明 |
-| --- | --- | --- |
-| `port` | `8787` | 后端监听端口 |
-| `apiBase` | `https://paintboard.luogu.me` | 上游 HTTP API |
-| `wsUrl` | `wss://paintboard.luogu.me/api/paintboard/ws` | 上游 WS 地址 |
-| `maxPacketsPerSec` | `230` | 发包限速，低于服务端上限 256/s |
-| `cooldownSecs` | `10` | 收到 `0xee` 后的等待时长 |
-| `maxReconnectSecs` | `60` | WS 重连最大退避秒数 |
+| 字段                 | 默认值                                          | 说明                           |
+| -------------------- | ----------------------------------------------- | ------------------------------ |
+| `port`             | `8787`                                        | 后端监听端口                   |
+| `apiBase`          | `https://paintboard.luogu.me`                 | 上游 HTTP API                  |
+| `wsUrl`            | `wss://paintboard.luogu.me/api/paintboard/ws` | 上游 WS 地址                   |
+| `maxPacketsPerSec` | `230`                                         | 发包限速，低于服务端上限 256/s |
+| `cooldownSecs`     | `10`                                          | 收到`0xee` 后的等待时长      |
+| `maxReconnectSecs` | `60`                                          | WS 重连最大退避秒数            |
 
 ## Token 管理
 
@@ -104,29 +104,29 @@ apps/
 
 ## REST 接口
 
-| 方法 | 路径 | 说明 |
-| --- | --- | --- |
-| GET | `/api/tokens` | Token 列表（脱敏） |
-| POST | `/api/tokens` | 新增 `{ name, uid, accessKey }`，并尝试换取 PaintKey |
-| PUT | `/api/tokens/:id` | 更新名称、uid 或 accessKey |
-| DELETE | `/api/tokens/:id` | 删除 Token |
-| POST | `/api/tokens/:id/refresh` | 重新获取 PaintKey |
-| POST | `/api/paint/start` | 开始绘画 `{ tokenId, imagePath, mode }` |
-| POST | `/api/paint/stop` | 停止绘画 |
-| POST | `/api/paint/pause` | 暂停绘画 |
-| POST | `/api/paint/resume` | 恢复绘画 |
-| GET | `/api/status` | 调度状态、连接状态、Token 数量 |
+| 方法   | 路径                        | 说明                                                  |
+| ------ | --------------------------- | ----------------------------------------------------- |
+| GET    | `/api/tokens`             | Token 列表（脱敏）                                    |
+| POST   | `/api/tokens`             | 新增`{ name, uid, accessKey }`，并尝试换取 PaintKey |
+| PUT    | `/api/tokens/:id`         | 更新名称、uid 或 accessKey                            |
+| DELETE | `/api/tokens/:id`         | 删除 Token                                            |
+| POST   | `/api/tokens/:id/refresh` | 重新获取 PaintKey                                     |
+| POST   | `/api/paint/start`        | 开始绘画`{ tokenId, imagePath, mode }`              |
+| POST   | `/api/paint/stop`         | 停止绘画                                              |
+| POST   | `/api/paint/pause`        | 暂停绘画                                              |
+| POST   | `/api/paint/resume`       | 恢复绘画                                              |
+| GET    | `/api/status`             | 调度状态、连接状态、Token 数量                        |
 
 ## 面板实时推送
 
 WebSocket 地址：`/ws`
 
-| 事件 | 内容 |
-| --- | --- |
-| `status` | 调度器状态切换 |
+| 事件         | 内容                                                                         |
+| ------------ | ---------------------------------------------------------------------------- |
+| `status`   | 调度器状态切换                                                               |
 | `progress` | 进度：`total` / `painted` / `failed` / `ackCounts` / `queueLength` |
-| `log` | 日志行 |
-| `tokens` | Token 相关通知 |
+| `log`      | 日志行                                                                       |
+| `tokens`   | Token 相关通知                                                               |
 
 ## 协议要点
 
