@@ -5,4 +5,4 @@ dist/
 .DS_Store
 
 # 运行数据：Token 加密存储与密钥
-apps/server/data/
+server/data/

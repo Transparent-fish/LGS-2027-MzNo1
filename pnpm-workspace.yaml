@@ -1,10 +1,13 @@
 packages:
-  - apps/*
+  - server
+  - web
 
 allowBuilds:
   esbuild: set this to true or false
   vue-demi: set this to true or false
+  sharp: set this to true or false
 
 onlyBuiltDependencies:
   - esbuild
   - vue-demi
+  - sharp
